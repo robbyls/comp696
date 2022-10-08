@@ -1,0 +1,326 @@
+import sys
+
+from PyQt5.QtWidgets import (
+    QApplication,
+    QPushButton,
+    QVBoxLayout,
+    QGridLayout,
+    QWidget,
+    QLabel,
+    QLineEdit,
+    QMessageBox,
+    QFileDialog
+)
+
+from PyQt5.QtGui import QIntValidator,QFont,QIcon
+from PyQt5.QtCore import Qt
+
+from matplotlib.backends.backend_qtagg import (
+    FigureCanvas)
+
+from matplotlib.figure import Figure
+
+import matplotlib as mpl
+
+from matplotlib import artist
+
+import numpy as np
+import os
+import glob
+import re
+import pandas as pd
+from os.path import expanduser
+
+from common import *
+from data_picker_window import *
+
+
+class MainForm(QWidget):
+
+    def __init__(self):
+
+        super().__init__()
+        self.setWindowTitle("Data Visualization Demo")
+        self.setWindowIcon(QIcon('chart_icon.png'))
+
+        # Create a QVBoxLayout instance
+        layout = QVBoxLayout()
+
+        # self.fig = Figure(figsize=(20, 16))
+        self.fig = Figure()
+        self.canvas = FigureCanvas(self.fig)
+        layout.addWidget(self.canvas)
+        self.ax = self.canvas.figure.subplots()
+
+        subLayout = QGridLayout()
+
+        self.loadButton = QPushButton("Load Data")
+        self.loadButton.setFont(QFont("Arial",14))
+        self.loadButton.clicked.connect(self.event_load_data)
+                
+        sampleNumberLabel = QLabel('&Current Sample# ')
+        sampleNumberLabel.setFont(QFont("Arial",14))
+        self.sampleNumberEdit = QLineEdit()
+        self.sampleNumberEdit.setFont(QFont("Arial",14))
+
+        # validator = QIntValidator(0, len(self.df_list))
+        # self.sampleNumberEdit.setValidator(validator)
+        self.sampleNumberEdit.setMaxLength(3)
+        self.sampleNumberEdit.setText('0')
+        self.sampleNumberEdit.setAlignment(Qt.AlignLeft)
+        self.sampleNumberEdit.setFont(QFont("Arial",14))
+        sampleNumberLabel.setBuddy(self.sampleNumberEdit)
+        
+        subLayout.addWidget(self.loadButton, 0,0)
+        subLayout.addWidget(sampleNumberLabel, 0,1)
+        subLayout.addWidget(self.sampleNumberEdit, 0,2)
+
+        intervalLabel = QLabel('&Update Internval (milliseconds) #')
+        intervalLabel.setFont(QFont("Arial",14))
+
+        self.intervalEdit = QLineEdit()
+        intervalValidator = QIntValidator(100, 10000)
+        self.intervalEdit.setValidator(intervalValidator)
+        self.intervalEdit.setMaxLength(5)
+        self.intervalEdit.setText('1000')
+        self.intervalEdit.setAlignment(Qt.AlignLeft)
+        self.intervalEdit.setFont(QFont("Arial",14))
+        intervalLabel.setBuddy(self.intervalEdit)
+        
+        subLayout.addWidget(intervalLabel, 0,3)
+        subLayout.addWidget(self.intervalEdit, 0,4)
+
+        self.gotoButton = QPushButton("Goto")
+        self.backButton = QPushButton("Back")
+        self.forwardBotton = QPushButton("Forward")
+        self.playButton = QPushButton("AutoPlay")
+        self.stopButton = QPushButton("Stop")
+
+        self.gotoButton.setFont(QFont("Arial",14))
+        self.backButton.setFont(QFont("Arial",14))
+        self.forwardBotton.setFont(QFont("Arial",14))
+        self.playButton.setFont(QFont("Arial",14))
+        self.stopButton.setFont(QFont("Arial",14))
+
+        self.gotoButton.clicked.connect(self.event_jumpto)
+        self.playButton.clicked.connect(self.event_play)
+        self.stopButton.clicked.connect(self.event_stop)
+        self.backButton.clicked.connect(self.event_back)
+        self.forwardBotton.clicked.connect(self.event_forward)
+
+        # by default, they all are disabled
+        self.gotoButton.setEnabled(False)
+        self.playButton.setEnabled(False)
+        self.stopButton.setEnabled(False)
+        self.backButton.setEnabled(False)
+        self.forwardBotton.setEnabled(False)
+
+        subLayout.addWidget(self.gotoButton, 0, 5)
+        subLayout.addWidget(self.backButton, 0, 6)
+        subLayout.addWidget(self.forwardBotton, 0, 7)
+        subLayout.addWidget(self.playButton, 0, 8)
+        subLayout.addWidget(self.stopButton, 0, 9)
+        
+        layout.addLayout(subLayout)
+
+        # Set the layout on the application's window
+        self.setLayout(layout)
+
+        self._timer = None
+        self.artist = None
+        self.title = None
+        self.df_list = None
+        self.value_min = 0
+        self.value_max  = 0
+
+        self.xAxisCol = None
+        self.yAxisCol = None
+        self.dataAxisCol = None
+
+        self.x_name = None
+        self.y_name = None
+        self.data_name = None
+
+        self.x_unit = None
+        self.y_unit = None
+        self.data_unit = None
+
+    def event_load_data(self):
+
+        try:
+            # read the data
+            # self.df_list, self.value_min, self.value_max = self.load_data()
+            self.df_list = self.load_data()
+
+            # if no data found, simply exit it
+            if self.df_list is None or len(self.df_list) == 0:
+                return
+
+            configForm = ConfigurationForm(self.df_list[0]['data'])
+            # configForm.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+            # configForm.show()
+            configForm.exec()
+
+            xConfig, yConfig, dataConfig = configForm.get_data()
+            configForm.close()
+
+            
+            # cmap = mpl.cm.cool
+            # norm = mpl.colors.Normalize(vmin=self.value_min, vmax=self.value_max)
+            # mappable = mpl.cm.ScalarMappable(norm=norm, cmap=cmap)
+
+            # validator = QIntValidator(0, len(self.df_list))
+            # self.sampleNumberEdit.setValidator(validator)
+
+            # # display the first sample
+            # df = self.df_list[0]['data']
+
+            # self.artist = self.ax.scatter(df['x'], df['z'], c=df['concentration'], s=100, cmap =cmap, vmin=self.value_min, vmax=self.value_max)
+            # self.title = self.ax.set_title("Sample Data", fontsize=20)
+
+            # self.fig.colorbar(mappable, ax=self.ax)
+            # self.ax.set_xlabel('x',fontsize=14)
+            # self.ax.set_ylabel('z (depth)',fontsize=14)
+
+            # self.sampleNumberEdit.setText('0')
+            # self.event_jumpto()
+
+            # self.gotoButton.setEnabled(True)
+            # self.playButton.setEnabled(True)
+            # self.stopButton.setEnabled(True)
+            # self.backButton.setEnabled(True)
+            # self.forwardBotton.setEnabled(True)
+
+
+
+        finally:
+            pass
+
+
+    def event_jumpto(self):
+
+        # get the index 
+        gotoIndex = int(self.sampleNumberEdit.text())
+
+        df = self.df_list[gotoIndex]['data']
+        self.artist.set_array(df['concentration'])
+
+        # update the title to show the sample #
+        self.title.set_text("Data Change Observation - Sample #: {}".format(gotoIndex))
+
+        self.artist.figure.canvas.draw()
+
+
+    def event_play(self):
+
+        if self._timer is not None:
+            self._timer.stop()
+    
+        interval = int(self.intervalEdit.text()) 
+        self._timer =  self.canvas.new_timer(interval)
+        self._timer.add_callback(self._rolling_update)
+        self._timer.start()
+
+    def _rolling_update(self):
+
+        # increase the index
+        gotoIndex = int(self.sampleNumberEdit.text())
+
+        if gotoIndex >= len(self.df_list) - 1:
+            gotoIndex = 0
+        else:
+            gotoIndex =  gotoIndex  + 1
+        
+        self.sampleNumberEdit.setText(str(gotoIndex))
+
+        self.event_jumpto()
+
+
+    def event_stop(self):
+
+        if self._timer != None:
+            self._timer.stop()
+            self._timer = None
+
+    def event_back(self):
+
+        # stop timer if existing
+        if self._timer != None:
+            self._timer.stop()
+            self._timer = None
+    
+        # get the index 
+        gotoIndex = int(self.sampleNumberEdit.text())
+        if gotoIndex > 0:
+            gotoIndex = gotoIndex - 1
+        else:
+            gotoIndex = len(self.df_list) -1
+        
+        self.sampleNumberEdit.setText(str(gotoIndex))
+
+        self.event_jumpto()
+
+
+    def event_forward(self):
+
+        # stop timer if existing
+        if self._timer != None:
+            self._timer.stop()
+            self._timer = None
+    
+        # get the index 
+        gotoIndex = int(self.sampleNumberEdit.text())
+        if gotoIndex < len(self.df_list) -1:
+            gotoIndex = gotoIndex + 1
+        else:
+            gotoIndex = 0
+        
+        self.sampleNumberEdit.setText(str(gotoIndex))
+        self.event_jumpto()
+
+
+    def load_data(self):
+
+        # p = re.compile('x_z_con(\d+)')
+
+        while True:
+
+            selected_dir = QFileDialog.getExistingDirectory(self,"Please select the folder that contains the data files",
+            expanduser("~"), QFileDialog.ShowDirsOnly)
+
+            # if user cancels the action
+            if not selected_dir:
+                return None, None, None
+     
+            csv_files = glob.glob(os.path.join(selected_dir, "*.*"))
+            if len(csv_files) == 0:
+                msg = QMessageBox()
+                msg.setIcon(QMessageBox.Information)
+                msg.setText("The selected diretory does not contain any file.")
+                msg.exec()
+
+                # prompt the dialog to the user again
+                continue
+                          
+            # read the data and concentration from csv files
+            # df_list,value_min,value_max = load_data_from_files(csv_files)
+            df_list = load_data_from_files(csv_files)
+            
+            if len(df_list) == 0:
+                msg = QMessageBox()
+                msg.setIcon(QMessageBox.Information)
+                msg.setText("The selected diretory does not contain the required data files.")
+                msg.exec()
+                # prompt the dialog to the user again
+                continue
+
+            # return df_list, value_min, value_max
+            return df_list
+
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    window = MainForm()
+    window.resize(1440,1024)
+    window.show()
+    sys.exit(app.exec_())
