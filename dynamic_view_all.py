@@ -164,32 +164,61 @@ class MainForm(QWidget):
             xConfig, yConfig, dataConfig = configForm.get_data()
             configForm.close()
 
+            if xConfig is None or yConfig is None or dataConfig is None:
+                return
             
-            # cmap = mpl.cm.cool
-            # norm = mpl.colors.Normalize(vmin=self.value_min, vmax=self.value_max)
-            # mappable = mpl.cm.ScalarMappable(norm=norm, cmap=cmap)
+            # find min and max values:
+            self.dataAxisCol = dataConfig[0]
+            self.xAxisCol = xConfig[0]
+            self.yAxisCol = yConfig[0]
 
-            # validator = QIntValidator(0, len(self.df_list))
-            # self.sampleNumberEdit.setValidator(validator)
+            self.data_name = dataConfig[1]
+            self.x_name =  xConfig[1]
+            self.y_name = yConfig[1]
+            
+            self.data_unit = dataConfig[2]
+            self.x_unit = xConfig[2]
+            self.y_unit = yConfig[2]
+                        
+            self.value_min = 0
+            self.value_max = 0
 
-            # # display the first sample
-            # df = self.df_list[0]['data']
+            for i in self.df_list:
+                df_file = i['data']
+                t_min = df_file[self.dataAxisCol].min()
+                t_max = df_file[self.dataAxisCol].max()
+                
+                if self.value_min == 0 or t_min < self.value_min:
+                    self.value_min = t_min
 
-            # self.artist = self.ax.scatter(df['x'], df['z'], c=df['concentration'], s=100, cmap =cmap, vmin=self.value_min, vmax=self.value_max)
-            # self.title = self.ax.set_title("Sample Data", fontsize=20)
+                if self.value_max == 0 or t_max > self.value_max:
+                    self.value_max = t_max
 
-            # self.fig.colorbar(mappable, ax=self.ax)
-            # self.ax.set_xlabel('x',fontsize=14)
-            # self.ax.set_ylabel('z (depth)',fontsize=14)
+            cmap = mpl.cm.cool
+            norm = mpl.colors.Normalize(vmin=self.value_min, vmax=self.value_max)
+            mappable = mpl.cm.ScalarMappable(norm=norm, cmap=cmap)
 
-            # self.sampleNumberEdit.setText('0')
-            # self.event_jumpto()
+            validator = QIntValidator(0, len(self.df_list))
+            self.sampleNumberEdit.setValidator(validator)
 
-            # self.gotoButton.setEnabled(True)
-            # self.playButton.setEnabled(True)
-            # self.stopButton.setEnabled(True)
-            # self.backButton.setEnabled(True)
-            # self.forwardBotton.setEnabled(True)
+            # display the first sample
+            df = self.df_list[0]['data']
+
+            self.artist = self.ax.scatter(df[self.xAxisCol], df[self.yAxisCol], c=df[self.dataAxisCol], s=100, cmap =cmap, vmin=self.value_min, vmax=self.value_max)
+            self.title = self.ax.set_title("Sample Data", fontsize=20)
+
+            self.fig.colorbar(mappable, ax=self.ax)
+            self.ax.set_xlabel(self.x_name,fontsize=14)
+            self.ax.set_ylabel(self.y_name,fontsize=14)
+
+            self.sampleNumberEdit.setText('0')
+            self.event_jumpto()
+
+            self.gotoButton.setEnabled(True)
+            self.playButton.setEnabled(True)
+            self.stopButton.setEnabled(True)
+            self.backButton.setEnabled(True)
+            self.forwardBotton.setEnabled(True)
 
 
 
@@ -203,7 +232,7 @@ class MainForm(QWidget):
         gotoIndex = int(self.sampleNumberEdit.text())
 
         df = self.df_list[gotoIndex]['data']
-        self.artist.set_array(df['concentration'])
+        self.artist.set_array(df[self.dataAxisCol])
 
         # update the title to show the sample #
         self.title.set_text("Data Change Observation - Sample #: {}".format(gotoIndex))

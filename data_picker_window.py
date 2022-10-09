@@ -72,8 +72,8 @@ class ConfigurationForm(QDialog):
         self._output = [xAxisCol,x_name,x_unit], [yAxisCol,y_name,y_unit],[dataAxisCol,data_name,data_unit]
         super().accept()
 
-    # def reject(self):
-    #     pass
+    def reject(self):
+        self._output = None, None, None
     
     def get_data(self):
         return self._output
