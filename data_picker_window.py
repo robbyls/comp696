@@ -27,6 +27,24 @@ class ConfigurationForm(QDialog):
         self.ui.comboBox_Col_Y.addItems(cols)
         self.ui.comboBox_Col_Data.addItems(cols)
 
+        # setup default value
+        if len(cols) > 0:
+            self.ui.comboBox_Col_X.setCurrentIndex(0)
+
+        if len(cols) > 1:
+            self.ui.comboBox_Col_Y.setCurrentIndex(1)
+
+        if len(cols) > 2:
+            self.ui.comboBox_Col_Data.setCurrentIndex(2)
+
+        self.ui.lineEdit_Unit_X.setText("x unit")
+        self.ui.lineEdit_Unit_Y.setText("y unit")
+        self.ui.lineEdit_Unit_Data.setText("data unit")
+
+        self.ui.lineEdit_Name_X.setText("X")
+        self.ui.lineEdit_Name_Y.setText("Y")
+        self.ui.lineEdit_Name_Data.setText("Data")
+
     def accept(self):
 
         xAxisCol = self.ui.comboBox_Col_X.currentText()

@@ -4,6 +4,7 @@ import pandas as pd
 from PyQt5.QtWidgets import QDial
 
 from PyQt5.QtCore import QAbstractTableModel,pyqtSignal,Qt,QObject
+from bisect import bisect_left
 
 # def load_data_from_files(csv_files):
 
@@ -61,7 +62,7 @@ class FloatDial(QDial):
 
     floatValueChanged = pyqtSignal(float)
 
-    def __init__(self, minimum, maximum, stepCount=1001):
+    def __init__(self, minimum, maximum, stepCount:int=101):
         super(FloatDial, self).__init__()
         self.minimumFloat = minimum
         self.maximumFloat = maximum
@@ -199,3 +200,24 @@ class ExclusiveComboGroup(QObject):
             if index > 0:
                 combo.setItemData(index, groupid, self._role)
                 combo.view().setRowHidden(index, True)
+
+
+
+
+def take_closest(myList, myNumber):
+    """
+    Assumes myList is sorted. Returns closest value to myNumber.
+
+    If two numbers are equally close, return the smallest number.
+    """
+    pos = bisect_left(myList, myNumber)
+    if pos == 0:
+        return myList[0]
+    if pos == len(myList):
+        return myList[-1]
+    before = myList[pos - 1]
+    after = myList[pos]
+    if after - myNumber < myNumber - before:
+        return after
+    else:
+        return before

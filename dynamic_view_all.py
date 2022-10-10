@@ -19,20 +19,15 @@ from matplotlib.backends.backend_qtagg import (
     FigureCanvas)
 
 from matplotlib.figure import Figure
-
 import matplotlib as mpl
 
-from matplotlib import artist
-
-import numpy as np
 import os
 import glob
-import re
-import pandas as pd
 from os.path import expanduser
 
 from common import *
 from data_picker_window import *
+from overxy_view import PopupWindow
 
 
 class MainForm(QWidget):
@@ -49,8 +44,8 @@ class MainForm(QWidget):
         # self.fig = Figure(figsize=(20, 16))
         self.fig = Figure()
         self.canvas = FigureCanvas(self.fig)
+
         layout.addWidget(self.canvas)
-        self.ax = self.canvas.figure.subplots()
 
         subLayout = QGridLayout()
 
@@ -137,6 +132,8 @@ class MainForm(QWidget):
         self.yAxisCol = None
         self.dataAxisCol = None
 
+        self.xConfig, self.yConfig,self. dataConfig = None, None, None
+
         self.x_name = None
         self.y_name = None
         self.data_name = None
@@ -145,20 +142,22 @@ class MainForm(QWidget):
         self.y_unit = None
         self.data_unit = None
 
+        # self.canvas.mpl_connect('button_press_event', self.onclick)
+        self.canvas.mpl_connect('pick_event', self.onpick)
+
+
     def event_load_data(self):
 
         try:
-            # read the data
-            # self.df_list, self.value_min, self.value_max = self.load_data()
-            self.df_list = self.load_data()
+            # read the data files
+            df_list = self.load_data()
 
             # if no data found, simply exit it
-            if self.df_list is None or len(self.df_list) == 0:
+            if df_list is None or len(df_list) == 0:
                 return
 
-            configForm = ConfigurationForm(self.df_list[0]['data'])
-            # configForm.setAttribute(QtCore.Qt.WA_DeleteOnClose)
-            # configForm.show()
+            # use the first data file to config the plotting
+            configForm = ConfigurationForm(df_list[0]['data'])
             configForm.exec()
 
             xConfig, yConfig, dataConfig = configForm.get_data()
@@ -166,6 +165,9 @@ class MainForm(QWidget):
 
             if xConfig is None or yConfig is None or dataConfig is None:
                 return
+
+            self.df_list = df_list
+            self.xConfig, self.yConfig,self. dataConfig = xConfig, yConfig, dataConfig
             
             # find min and max values:
             self.dataAxisCol = dataConfig[0]
@@ -204,13 +206,21 @@ class MainForm(QWidget):
             # display the first sample
             df = self.df_list[0]['data']
 
-            self.artist = self.ax.scatter(df[self.xAxisCol], df[self.yAxisCol], c=df[self.dataAxisCol], s=100, cmap =cmap, vmin=self.value_min, vmax=self.value_max)
-            self.title = self.ax.set_title("Sample Data", fontsize=20)
+            # self.ax.clear()
+            self.canvas.figure.clear()
 
-            self.fig.colorbar(mappable, ax=self.ax)
-            self.ax.set_xlabel(self.x_name,fontsize=14)
-            self.ax.set_ylabel(self.y_name,fontsize=14)
+            self.ax = self.canvas.figure.subplots()
 
+            self.artist = self.ax.scatter(df[self.xAxisCol], df[self.yAxisCol], c=df[self.dataAxisCol], s=100, cmap =cmap, vmin=self.value_min, vmax=self.value_max, picker=True, pickradius=5)
+            self.title = self.ax.set_title("", fontsize=18)
+
+            self.colorbar = self.fig.colorbar(mappable, ax=self.ax)
+            self.colorbar.set_label(f"{self.data_name} ({self.data_unit})")
+            
+            self.ax.set_xlabel(f"{self.x_name} ({self.x_unit})",fontsize=14)
+            self.ax.set_ylabel(f"{self.y_name} ({self.y_unit})",fontsize=14)
+
+            # the initial sample displayed is 0
             self.sampleNumberEdit.setText('0')
             self.event_jumpto()
 
@@ -219,7 +229,6 @@ class MainForm(QWidget):
             self.stopButton.setEnabled(True)
             self.backButton.setEnabled(True)
             self.forwardBotton.setEnabled(True)
-
 
 
         finally:
@@ -235,7 +244,7 @@ class MainForm(QWidget):
         self.artist.set_array(df[self.dataAxisCol])
 
         # update the title to show the sample #
-        self.title.set_text("Data Change Observation - Sample #: {}".format(gotoIndex))
+        self.ax.title.set_text("{} Data - Sample #: {}".format(self.dataConfig[1],gotoIndex))
 
         self.artist.figure.canvas.draw()
 
@@ -319,7 +328,7 @@ class MainForm(QWidget):
 
             # if user cancels the action
             if not selected_dir:
-                return None, None, None
+                return None
      
             csv_files = glob.glob(os.path.join(selected_dir, "*.*"))
             if len(csv_files) == 0:
@@ -345,6 +354,21 @@ class MainForm(QWidget):
 
             # return df_list, value_min, value_max
             return df_list
+
+
+    def onpick(self, event):
+
+        xdata = event.mouseevent.xdata  
+        ydata = event.mouseevent.ydata  
+        # print('onpick points:', xdata, ydata )
+
+        self.event_stop()
+        popup = PopupWindow(self.xConfig, self.yConfig, self.dataConfig, self.df_list, round(xdata,6), round(ydata,6))
+        popup.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+        # popup.show()
+        popup.exec()
+        # popup.close()
+
 
 
 if __name__ == "__main__":
