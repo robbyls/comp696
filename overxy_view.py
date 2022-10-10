@@ -86,31 +86,17 @@ class PopupWindow(QDialog):
         subLayout.addWidget(self.dialY, 3,1)
 
         layout.addLayout(subLayout)
-        self.setLayout(layout)
 
         self.dialX.floatValueChanged.connect(self.updateFloatXValue)
         self.dialY.floatValueChanged.connect(self.updateFloatYValue)
 
         self.dialX.setFloatValue(self.xValue)
         self.dialY.setFloatValue(self.yValue)
-       
-         # translate to the existing x and y values in the data
+
+        self.setLayout(layout)
+
 
         self.plot_sample_over_position(self.xValue, self.yValue)
-
-        # self.value_min = 0
-        # self.value_max = 0
-
-        # self.z_min = 0 
-        # self.z_max = 0 
-
-        # self.x_min = 0 
-        # self.x_max = 0 
-
-        # self.current_x = 0
-        # self.current_z = 0
-
-        # self.dataLoaded = False
    
 
     def updateFloatXValue(self, value):

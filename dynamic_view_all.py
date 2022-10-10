@@ -12,8 +12,8 @@ from PyQt5.QtWidgets import (
     QFileDialog
 )
 
-from PyQt5.QtGui import QIntValidator,QFont,QIcon
-from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QIntValidator,QFont,QIcon,QRegularExpressionValidator
+from PyQt5.QtCore import Qt,QRegularExpression
 
 from matplotlib.backends.backend_qtagg import (
     FigureCanvas)
@@ -58,12 +58,11 @@ class MainForm(QWidget):
         self.sampleNumberEdit = QLineEdit()
         self.sampleNumberEdit.setFont(QFont("Arial",14))
 
-        # validator = QIntValidator(0, len(self.df_list))
-        # self.sampleNumberEdit.setValidator(validator)
         self.sampleNumberEdit.setMaxLength(3)
         self.sampleNumberEdit.setText('0')
         self.sampleNumberEdit.setAlignment(Qt.AlignLeft)
         self.sampleNumberEdit.setFont(QFont("Arial",14))
+    
         sampleNumberLabel.setBuddy(self.sampleNumberEdit)
         
         subLayout.addWidget(self.loadButton, 0,0)
@@ -167,6 +166,10 @@ class MainForm(QWidget):
                 return
 
             self.df_list = df_list
+
+            validator = QIntValidator(0, len(self.df_list)-1)
+            self.sampleNumberEdit.setValidator(validator)
+
             self.xConfig, self.yConfig,self. dataConfig = xConfig, yConfig, dataConfig
             
             # find min and max values:
@@ -237,6 +240,10 @@ class MainForm(QWidget):
 
     def event_jumpto(self):
 
+        if not self.sampleNumberEdit.hasAcceptableInput():
+            self.sampleNumberEdit.setFocus()
+            return
+
         # get the index 
         gotoIndex = int(self.sampleNumberEdit.text())
 
@@ -251,10 +258,15 @@ class MainForm(QWidget):
 
     def event_play(self):
 
+        if not self.intervalEdit.hasAcceptableInput():
+            self.intervalEdit.setFocus()
+            return
+
         if self._timer is not None:
             self._timer.stop()
     
         interval = int(self.intervalEdit.text()) 
+
         self._timer =  self.canvas.new_timer(interval)
         self._timer.add_callback(self._rolling_update)
         self._timer.start()
