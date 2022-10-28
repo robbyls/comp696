@@ -160,12 +160,24 @@
       <enum>Qt::Horizontal</enum>
      </property>
      <property name="standardButtons">
-      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+      <set>QDialogButtonBox::Ok</set>
      </property>
     </widget>
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>comboBox_Col_X</tabstop>
+  <tabstop>lineEdit_Name_X</tabstop>
+  <tabstop>lineEdit_Unit_X</tabstop>
+  <tabstop>comboBox_Col_Y</tabstop>
+  <tabstop>lineEdit_Name_Y</tabstop>
+  <tabstop>lineEdit_Unit_Y</tabstop>
+  <tabstop>comboBox_Col_Data</tabstop>
+  <tabstop>lineEdit_Name_Data</tabstop>
+  <tabstop>lineEdit_Unit_Data</tabstop>
+  <tabstop>tableData</tabstop>
+ </tabstops>
  <resources/>
  <connections>
   <connection>

@@ -6,6 +6,9 @@ from PyQt5.QtCore import QAbstractTableModel
 from common import *
 from config_view import *
 import pandas as pd
+import json 
+from pathlib import Path
+import os
 
 class ConfigurationForm(QDialog):
 
@@ -27,7 +30,7 @@ class ConfigurationForm(QDialog):
         self.ui.comboBox_Col_Y.addItems(cols)
         self.ui.comboBox_Col_Data.addItems(cols)
 
-        # setup default value
+        # set default values anyway
         if len(cols) > 0:
             self.ui.comboBox_Col_X.setCurrentIndex(0)
 
@@ -37,13 +40,48 @@ class ConfigurationForm(QDialog):
         if len(cols) > 2:
             self.ui.comboBox_Col_Data.setCurrentIndex(2)
 
-        self.ui.lineEdit_Unit_X.setText("x unit")
-        self.ui.lineEdit_Unit_Y.setText("y unit")
-        self.ui.lineEdit_Unit_Data.setText("data unit")
+        # load the saved configuration
+        home_dir = Path.home()
+        config_file_path = os.path.join(home_dir, ".data_visualizer.config")
+        if os.path.exists(config_file_path):
+            with open(config_file_path, 'r') as f:
+                saved_config = json.load(f)
+                
+                l_cols = list(cols)
+                
+                if 'x' in saved_config:
+                    config_x = saved_config['x']
+                    self.ui.lineEdit_Name_X.setText(config_x.get('name','X'))
+                    self.ui.lineEdit_Unit_X.setText(config_x.get('unit','x unit'))
+                    if 'col' in config_x and config_x['col'] in l_cols:
+                        idx = l_cols.index(config_x['col'] )
+                        self.ui.comboBox_Col_X.setCurrentIndex(idx)
+                
+                if 'y' in saved_config:
+                    config_y = saved_config['y']
+                    self.ui.lineEdit_Name_Y.setText(config_y.get('name','Y'))
+                    self.ui.lineEdit_Unit_Y.setText(config_y.get('unit','y unit'))
+                    if 'col' in config_y and config_y['col'] in l_cols:
+                        idx = l_cols.index(config_y['col'] )
+                        self.ui.comboBox_Col_Y.setCurrentIndex(idx)
+                
+                if 'data' in saved_config:
+                    config_data = saved_config['data']
+                    self.ui.lineEdit_Name_Data.setText(config_data.get('name','Data'))
+                    self.ui.lineEdit_Unit_Data.setText(config_data.get('unit','data unit'))
+                    if 'col' in config_data and config_data['col'] in l_cols:
+                        idx = l_cols.index(config_data['col'] )
+                        self.ui.comboBox_Col_Data.setCurrentIndex(idx)
+            
+        else:
+            self.ui.lineEdit_Unit_X.setText("x unit")
+            self.ui.lineEdit_Unit_Y.setText("y unit")
+            self.ui.lineEdit_Unit_Data.setText("data unit")
 
-        self.ui.lineEdit_Name_X.setText("X")
-        self.ui.lineEdit_Name_Y.setText("Y")
-        self.ui.lineEdit_Name_Data.setText("Data")
+            self.ui.lineEdit_Name_X.setText("X")
+            self.ui.lineEdit_Name_Y.setText("Y")
+            self.ui.lineEdit_Name_Data.setText("Data")
+                
 
     def accept(self):
 
@@ -88,6 +126,18 @@ class ConfigurationForm(QDialog):
             return
 
         self._output = [xAxisCol,x_name,x_unit], [yAxisCol,y_name,y_unit],[dataAxisCol,data_name,data_unit]
+        
+        # save the result to a json file
+        config_map={}
+        config_map['x']={'name':x_name,'col':xAxisCol,'unit':x_unit}
+        config_map['y']={'name':y_name,'col':yAxisCol,'unit':y_unit}
+        config_map['data']={'name':data_name,'col':dataAxisCol,'unit':data_unit}
+        
+        home_dir = Path.home()
+        config_file_path = os.path.join(home_dir, ".data_visualizer.config")
+        with open(config_file_path, 'w') as f:
+            json.dump(config_map, f)
+                
         super().accept()
 
     def reject(self):

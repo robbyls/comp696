@@ -109,8 +109,6 @@ class Window(QWidget):
 
         subLayout.addWidget(self.qBarZLabel, 2,0)
         subLayout.addWidget(self.qBarZValue, 2,1)
-
-
     
         subLayout.addWidget(self.dialX, 1,1,2,1)
         subLayout.addWidget(self.dialZ, 1,2,2,1)

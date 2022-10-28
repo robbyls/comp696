@@ -29,7 +29,7 @@ from common import FloatDial, take_closest
 
 class PopupWindow(QDialog):
 
-    def __init__(self, xConfig, yConfig, dataConfig, df_list, xValue, yValue):
+    def __init__(self, xConfig, yConfig, dataConfig, df_list, xValue, yValue, value_min,value_max):
 
         super().__init__()
         self.setWindowTitle("Data Change Visualization")
@@ -41,6 +41,9 @@ class PopupWindow(QDialog):
         self.df_list = df_list
         self.xValue = xValue
         self.yValue = yValue
+        
+        self.value_max = value_max
+        self.value_min = value_min
 
         # Create a QVBoxLayout instance
         layout = QVBoxLayout()
@@ -94,7 +97,6 @@ class PopupWindow(QDialog):
         self.dialY.setFloatValue(self.yValue)
 
         self.setLayout(layout)
-
 
         self.plot_sample_over_position(self.xValue, self.yValue)
    
@@ -193,6 +195,9 @@ class PopupWindow(QDialog):
         self.ax.set_xlabel('Sample #',fontsize=10)
 
         self.ax.set_ylabel(f"{self.dataConfig[1]} ({self.dataConfig[2]})",fontsize=10)
+        
+        # use consist value range across all datasets.
+        self.ax.set_ylim([self.value_min, self.value_max])
 
         # self.ax.xaxis.set_major_locator(ticker.MultipleLocator(20))
         # self.ax.xaxis.set_minor_locator(ticker.MultipleLocator(5))

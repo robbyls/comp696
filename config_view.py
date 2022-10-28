@@ -90,7 +90,7 @@ class Ui_Form(object):
         self.buttonBox = QtWidgets.QDialogButtonBox(Form)
         self.buttonBox.setLayoutDirection(QtCore.Qt.LeftToRight)
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
-        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
+        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Ok)
         self.buttonBox.setObjectName("buttonBox")
         self.verticalLayout.addWidget(self.buttonBox)
 
@@ -98,6 +98,15 @@ class Ui_Form(object):
         self.buttonBox.accepted.connect(Form.accept) # type: ignore
         self.buttonBox.rejected.connect(Form.reject) # type: ignore
         QtCore.QMetaObject.connectSlotsByName(Form)
+        Form.setTabOrder(self.comboBox_Col_X, self.lineEdit_Name_X)
+        Form.setTabOrder(self.lineEdit_Name_X, self.lineEdit_Unit_X)
+        Form.setTabOrder(self.lineEdit_Unit_X, self.comboBox_Col_Y)
+        Form.setTabOrder(self.comboBox_Col_Y, self.lineEdit_Name_Y)
+        Form.setTabOrder(self.lineEdit_Name_Y, self.lineEdit_Unit_Y)
+        Form.setTabOrder(self.lineEdit_Unit_Y, self.comboBox_Col_Data)
+        Form.setTabOrder(self.comboBox_Col_Data, self.lineEdit_Name_Data)
+        Form.setTabOrder(self.lineEdit_Name_Data, self.lineEdit_Unit_Data)
+        Form.setTabOrder(self.lineEdit_Unit_Data, self.tableData)
 
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate
