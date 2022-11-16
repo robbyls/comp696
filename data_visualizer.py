@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import (
     QPushButton,
     QVBoxLayout,
     QGridLayout,
+    QStackedLayout,
     QWidget,
     QLabel,
     QLineEdit,
@@ -15,8 +16,7 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtGui import QIntValidator,QFont,QIcon,QRegularExpressionValidator
 from PyQt5.QtCore import Qt,QRegularExpression
 
-from matplotlib.backends.backend_qtagg import (
-    FigureCanvas)
+from matplotlib.backends.backend_qtagg import FigureCanvas
 
 from matplotlib.figure import Figure
 import matplotlib as mpl
@@ -40,14 +40,23 @@ class MainForm(QDialog):
 
         # Create a QVBoxLayout instance
         layout = QVBoxLayout()
+        
+        self.plotLayout = QStackedLayout()
+        layout.addLayout(self.plotLayout)
 
-        # self.fig = Figure(figsize=(20, 16))
         self.fig = Figure()
-        # self.fig.set_facecolor("black")
         self.canvas = FigureCanvas(self.fig)
-
-        layout.addWidget(self.canvas)
-
+                
+        self.mainLabel = QLabel("Please load data files first.")
+        font = self.mainLabel.font()
+        font.setPointSize(30)
+        self.mainLabel.setFont(font)
+        self.mainLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                
+        # layout.addWidget(self.canvas)
+        self.plotLayout.addWidget(self.canvas)
+        self.plotLayout.addWidget(self.mainLabel)
+        
         subLayout = QGridLayout()
 
         self.loadButton = QPushButton("&Load Data")
@@ -128,6 +137,9 @@ class MainForm(QDialog):
         subLayout.addWidget(self.stopButton, 0, 10)
         
         layout.addLayout(subLayout)
+        
+        # display the label
+        self.plotLayout.setCurrentIndex(1)
 
         # Set the layout on the application's window
         self.setLayout(layout)
@@ -153,7 +165,6 @@ class MainForm(QDialog):
         self.y_unit = None
         self.data_unit = None
 
-        # self.canvas.mpl_connect('button_press_event', self.onclick)
         self.canvas.mpl_connect('pick_event', self.onpick)
 
 
@@ -196,7 +207,8 @@ class MainForm(QDialog):
             self.data_unit = dataConfig[2]
             self.x_unit = xConfig[2]
             self.y_unit = yConfig[2]
-                        
+                
+            # find min and max value        
             self.value_min = 0
             self.value_max = 0
 
@@ -226,7 +238,8 @@ class MainForm(QDialog):
 
             self.ax = self.canvas.figure.subplots()
 
-            self.artist = self.ax.scatter(df[self.xAxisCol], df[self.yAxisCol], c=df[self.dataAxisCol], s=100, cmap =cmap, vmin=self.value_min, vmax=self.value_max, picker=True, pickradius=5)
+            self.artist = self.ax.scatter(df[self.xAxisCol], df[self.yAxisCol], c=df[self.dataAxisCol], 
+                                          s=100, cmap =cmap, vmin=self.value_min, vmax=self.value_max, picker=True, pickradius=5)
             self.title = self.ax.set_title("", fontsize=18)
 
             self.colorbar = self.fig.colorbar(mappable, ax=self.ax)
@@ -238,6 +251,9 @@ class MainForm(QDialog):
             # the initial sample displayed is 0
             self.sampleNumberEdit.setText('0')
             self.event_jumpto()
+            
+            # display the plot
+            self.plotLayout.setCurrentIndex(0)
 
             self.gotoButton.setEnabled(True)
             self.playButton.setEnabled(True)
@@ -384,14 +400,13 @@ class MainForm(QDialog):
 
         xdata = event.mouseevent.xdata  
         ydata = event.mouseevent.ydata  
-        # print('onpick points:', xdata, ydata )
 
         self.event_stop()
-        popup = PopupWindow(self.xConfig, self.yConfig, self.dataConfig, self.df_list, round(xdata,6), round(ydata,6), self.value_min, self.value_max)
+        popup = PopupWindow(self.xConfig, self.yConfig, self.dataConfig, 
+                            self.df_list, round(xdata,6), round(ydata,6), 
+                            self.value_min, self.value_max)
         popup.setAttribute(QtCore.Qt.WA_DeleteOnClose)
-        # popup.show()
         popup.exec()
-        # popup.close()
 
 
 
