@@ -77,14 +77,13 @@ In order to run the program, Python 3 environment and some libraries must be ins
 
 1. To install Anaconda, just follow its instruction at https://www.anaconda.com/. This software is supposedly platform independent but please keep in mind the devlopment and unit test so far have been only done on Windows 10 platform. In addition, please be sure to choose Python 3 and not Python 2.x as some features might not be well supported.
 <br>
-2. Once Anaconda is installed. Use the [environment.yml](environment.yml) file to restore the virtual environment with all the required libraries to run the program. Clone this repo, open up an Anaconda Prompt window, navigate to the cloned repo directory and run the command below to create a virtual environment named as "visualizer". 
-   
+
+2. Once Anaconda is installed. Use the [environment.yml](environment.yml) file to restore the virtual environment with all the required libraries to run the program. Clone this repo, open up an Anaconda Prompt window, navigate to the cloned repo directory and run the command below to create a virtual environment named as visualizer. 
+
     ```bash
     conda env create -f environment.yml
     ```
-
     <img src="images/anaconda_create_environment.png" alt="Create Environment" width="800">
-
 
 3. Once the environment is restored, the Anaconda Prompt window should notify the user that the environment is ready for use, like the screenshot below.
 
