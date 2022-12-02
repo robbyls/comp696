@@ -1,0 +1,8 @@
+name: visualizer
+channels:
+  - defaults
+dependencies:
+  - jupyterlab
+  - pandas
+  - matplotlib
+  - pyqt5-sip
