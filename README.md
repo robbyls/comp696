@@ -82,7 +82,9 @@ In order to run the program, Python 3 environment and some libraries must be ins
     ```bash
     conda env create -f environment.yml
     ```
-   <img src="images/anaconda_create_environment.png" alt="Create Environment" width="800">
+
+    <img src="images/anaconda_create_environment.png" alt="Create Environment" width="800">
+
 
 3. Once the environment is restored, the Anaconda Prompt window should notify the user that the environment is ready for use, like the screenshot below.
 
